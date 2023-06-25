@@ -1,4 +1,5 @@
 ''' filename : contourfeatures.py
+Este archivo es el que define los contornos, no recuerdo para que se usa.
 
 This sample calculates some useful parameters of a contour. This is an OpenCV 
 implementation of regionprops function in matlab with some additional features.

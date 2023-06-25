@@ -1,15 +1,12 @@
-
+# Librerias por defecto
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-Puntos = [2877 , 250, 2896 , 263]
-print (Puntos)
+# Gracias a Murtaza's Workshop - Robotics and AI, sin su ayuda este
+# archivo quiza no existiria
 
-
-## ----------------------------- Funciones ----------------------------- #
-
-# Funcion imshow
+## --------------------------- Funcion imshow -------------------------- #
 def imshow(Img,title = None):
     plt.figure()
     if len(Img.shape) == 3:
@@ -22,7 +19,11 @@ def imshow(Img,title = None):
     plt.show()
     # plt.show() espera a que la imagen se cierre para proseguir
 
+## --------------------------------------------------------------------- #
 
+
+
+## ----------------------- Funcion imclearborder ----------------------- #
 # Funcion imclearborder (equivalente a imclearborder de MATLAB)
 def imclearborder(Img_BW):
     # Es importante insertar una imagen blanco y negro, pero voy a
@@ -64,8 +65,12 @@ def imclearborder(Img_BW):
 
     return Img_clear
 
+## --------------------------------------------------------------------- #
 
-# Funcion imfill (equivalente a imfill de MATLAB)
+
+
+## --------------------------- Funcion imfill -------------------------- #
+# Funcion equivalente a imfill de MATLAB
 def imfill(Img):
 # Gracias a Satya Mallick por el script
 # https://learnopencv.com/filling-holes-in-an-image-using-opencv-python-c/
@@ -89,8 +94,12 @@ def imfill(Img):
     Salida = Img | Img_floodfill_inv
     return Salida
 
+## --------------------------------------------------------------------- #
 
-# Funcion label2rgb (equivalente a label2rgb de MATLAB)
+
+
+## ------------------------- Funcion label2rgb ------------------------- #
+# Funcion equivalente a label2rgb de MATLAB
 def label2rgb(labels,N_label,color_fondo = (0,0,0),colormap = 2):
     # Mascara logica con los pixeles correspondientes al fondo
     Fondo = labels == 0
@@ -104,17 +113,14 @@ def label2rgb(labels,N_label,color_fondo = (0,0,0),colormap = 2):
 
     return Img_color
 
-# Funcion de rotacion (opencv no tiene funciones para rotar a cualquier angulo)
-# De todos modos no se que tan útl será
-def rotate_image(image, angle):
-  image_center = tuple(np.array(image.shape[1::-1]) / 2)
-  rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-  result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
-  return result
+## --------------------------------------------------------------------- #
 
+
+
+## ----------------------- Funcion Deteccion_ang ----------------------- #
 # Funcion Deteccion_ang
 def Deteccion_ang(Imagen_BW):
-    Contours, _ = cv2.findContours(Imagen_BW,
+    Contours, Jerarquia = cv2.findContours(Imagen_BW,
                         cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
     # Con esta funcion se obtienen los contornos a partir de los
     # bordes obtenidos por Canny
@@ -122,15 +128,19 @@ def Deteccion_ang(Imagen_BW):
 
     for cnt in Contours:
         Elipse = cv2.fitEllipse(cnt)
-        # print(Elipse,'\n')
+        print(Elipse,'\n')
         # # center, axis_length and orientation of ellipse
-        ( _ , _ ,Orientacion) = Elipse
+        (Centro,Ejes,Orientacion) = Elipse
         Suma_ang = Orientacion + Suma_ang   # Sumatoria
         cont += 1                           # Contador
 
-    # print("Angulo fitEllipse:", Suma_ang/cont)
-    return ( 90 - Suma_ang/cont )
+    return Suma_ang/cont
 
+## --------------------------------------------------------------------- #
+
+
+
+## ---------------------- Funcion Deteccion_texto ---------------------- #
 # Funcion Deteccion_texto
 def Deteccion_texto(Imagen_BW, Ancho_prom, Alto_prom, proporcion):
     Imagen_BW = imfill(Imagen_BW)
@@ -155,6 +165,5 @@ def Deteccion_texto(Imagen_BW, Ancho_prom, Alto_prom, proporcion):
     # Coloreamos los elementos
     Img_color = label2rgb(labels,num_labels)
     return Img_color
-
 
 ## --------------------------------------------------------------------- #

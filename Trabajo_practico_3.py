@@ -31,7 +31,7 @@ print("Dimensiones: ", Ancho, Alto)
 
 ## ---------------------------- Dilatacion ----------------------------- #
 # Para dilatar, hay que crear una estructura llamada kernel
-kernel = np.ones((3,3),np.uint8)    # square (5,5)
+kernel = np.ones((3,3),np.uint8)
 Img_BW = cv2.dilate(Img_BW, kernel, iterations = 1)
 # El tercer argumento es opcional y por defecto es 1
 
