@@ -68,7 +68,6 @@ def imclearborder(Img_BW):
 ## --------------------------------------------------------------------- #
 
 
-
 ## --------------------------- Funcion imfill -------------------------- #
 # Funcion equivalente a imfill de MATLAB
 def imfill(Img):
@@ -128,7 +127,7 @@ def Deteccion_ang(Imagen_BW):
 
     for cnt in Contours:
         Elipse = cv2.fitEllipse(cnt)
-        print(Elipse,'\n')
+        # print(Elipse,'\n')
         # # center, axis_length and orientation of ellipse
         (Centro,Ejes,Orientacion) = Elipse
         Suma_ang = Orientacion + Suma_ang   # Sumatoria
@@ -154,7 +153,7 @@ def Deteccion_texto(Imagen_BW, Ancho_prom, Alto_prom, proporcion):
     # El tercer argumento es opcional y por defecto es 1
 
     Angulo = Deteccion_ang(Deteccion)
-    print("Angulo:", Angulo)
+    print("Angulo: {:.2f}" .format(Angulo) )
 
     Output = cv2.connectedComponentsWithStats(Deteccion, 8, cv2.CV_32S)
 

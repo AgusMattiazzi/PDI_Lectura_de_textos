@@ -22,7 +22,7 @@ Img_BW = matlab.imclearborder(Img_BW1)
 
 # Dimensiones de la imagen
 Alto,Ancho = Img_BW.shape[:2]      # Obtengo las dimensiones
-print("Dimensiones: ", Ancho, Alto)
+print("Dimensiones de la imagen: ", Ancho, Alto, "\n")
 
 # Mostrar Imagen
 # imshow(Img_BW, title = 'Bordes Limpios')
@@ -66,6 +66,7 @@ for i in range(1,num_labels):
     # Bbox[2] : Ancho
     # Bbox[3] : Alto
 
+    # Dibujar rectangulos
     cv2.rectangle(Img_color, (Bbox[0], Bbox[1]), (Bbox[0]+Bbox[2],
         Bbox[1]+Bbox[3]), (255,255,255), 2)
     
@@ -80,10 +81,13 @@ for i in range(1,num_labels):
 # Crop = Img_color2[ Bbox[1]:Bbox[1]+Bbox[3], Bbox[0]:Bbox[0]+Bbox[2] ]
 # imshow(Crop, title = 'Imagen Recortada')
 
+# Ancho y alto promedio de letras.
 Ancho_prom = Suma_Ancho/num_labels
 Alto_prom = Suma_Alto/num_labels
 
-print(Ancho_prom, Alto_prom)    # Valor preliminar
+print("Dimensiones promedio de las letras")
+print("Ancho: {:.2f},\tAlto: {:.2f}".format(Ancho_prom, Alto_prom))
+# Se formatean los float para q se muestren sólo dos decimales, una porqueria la verdad.
 
 ## Esto se puede modificar para detectar los puntos, CONSERVAR
 # Suma_Alto = 0;    Suma_Ancho = 0
@@ -104,16 +108,14 @@ print(Ancho_prom, Alto_prom)    # Valor preliminar
 
 matlab.imshow(Img_color, title = 'Matriz Etiqueta RGB')
 
+# Se usa una dilatación para unir las letras de cada palabra
 Palabras = matlab.imfill(Palabras)
 kernel = np.ones((8,8),np.uint8)    # square (5,5)
 Palabras = cv2.dilate(Palabras, kernel, iterations = 1)
 matlab.imshow(Palabras, title = 'Palabras 1')  # Parece prometedor
 
-
-
-
 ## ------------------------ Deteccion de Texto ------------------------- #
-
+# Se usa dilatación con distintos kernel para resaltar palabras o párrafos
 dil_palabra = 0.3;  dil_parrafo = 4
 
 Img_palabra = matlab.Deteccion_texto(Img_BW, Ancho_prom, Alto_prom, dil_palabra)
@@ -125,17 +127,17 @@ matlab.imshow(Img_parrafo, title = 'Parrafos detectados')
 # # Funcion Deteccion_texto
 # def Deteccion_texto(Imagen_BW, Ancho_prom, Alto_prom, proporcion):
 
-proporcion = dil_parrafo
-
+# Esta parte del programa no la entiendo
 Imagen_BW = matlab.imfill(Img_BW)
 
+proporcion = dil_parrafo
 Ancho_kernel = int( Ancho_prom*proporcion )
 Alto_kernel = int( Alto_prom*proporcion )
 
 kernel = np.ones((Ancho_kernel,Alto_kernel),np.uint8)    # square (5,5)
 Deteccion = cv2.dilate(Imagen_BW, kernel, iterations = 1)
-Deteccion = matlab.imfill(Deteccion)
 # El tercer argumento es opcional y por defecto es 1
+Deteccion = matlab.imfill(Deteccion)
 
 Output = cv2.connectedComponentsWithStats(Deteccion, 8, cv2.CV_32S)
 
@@ -147,6 +149,9 @@ labels =        Output[1]   # Matriz con etiquetas
 Img_color = matlab.label2rgb(labels,num_labels)
 
 # ## ----------------------------- Rotacion ------------------------------ #
+# La rotacion funciono bastante mal, dejo ésto por ahora para tener algo que me sirva,
+# pero no promete mucho
+
 # Ang_rotacion = -Angulo
 # Rotada = rotate_image(Img_BW, Ang_rotacion)
 # imshow(Rotada, title = 'Imagen Rotada')
@@ -178,7 +183,7 @@ for cnt in Contours:
         Hull = np.resize(Hull,( int( np.size(Hull)/2 ), 2))   # Formateo
         cv2.drawContours(Img_color,[Hull],0,(255,0,255),5 )
         for points in Hull:
-            cv2.circle(Img_color,(points[0],points[1]),5,(255,0,0),5)
+            cv2.circle(Img_color,(points[0],points[1]),5,(255,0,0),10)
 
         # Bounding box
         Bbox = cv2.boundingRect(cnt)
@@ -192,16 +197,11 @@ for cnt in Contours:
         # Dibujar Rectangulo de minima area que abarca al texto
         cv2.drawContours(Img_color,[Box],0,(0,0,255),5 )
 
-        for points in Hull:
-            cv2.circle(Img_color,(points[0],points[1]),5,(255,0,0),10)
-
 # Imprimir resultados para la caja, funca relativamente bien, faltan ajustes
 print(Box, Box.shape)
-print(Bbox)
-# Hull = np.resize(Hull,(np.int( np.size(Hull)/2 ), 2)) 
-print(Hull, Hull.shape )
+# print(Bbox)
+# Hull = np.resize(Hull,(np.int( np.size(Hull)/2 ), 2))
+# print(Hull, Hull.shape )
 matlab.imshow(Img_color, title = 'Imagen Marcada')
 
 ## --------------------------------------------------------------------- #
-
-
