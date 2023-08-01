@@ -115,45 +115,18 @@ def label2rgb(labels,N_label,color_fondo = (0,0,0),colormap = 2):
 ## --------------------------------------------------------------------- #
 
 
-
-## ----------------------- Funcion Deteccion_ang ----------------------- #
-# Funcion Deteccion_ang
-def Deteccion_ang(Imagen_BW):
-    Contours, Jerarquia = cv2.findContours(Imagen_BW,
-                        cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
-    # Con esta funcion se obtienen los contornos a partir de los
-    # bordes obtenidos por Canny
-    Suma_ang = 0;       cont = 0
-
-    for cnt in Contours:
-        Elipse = cv2.fitEllipse(cnt)
-        # print(Elipse,'\n')
-        # # center, axis_length and orientation of ellipse
-        (Centro,Ejes,Orientacion) = Elipse
-        Suma_ang = Orientacion + Suma_ang   # Sumatoria
-        cont += 1                           # Contador
-
-    return Suma_ang/cont
-
-## --------------------------------------------------------------------- #
-
-
-
 ## ---------------------- Funcion Deteccion_texto ---------------------- #
 # Funcion Deteccion_texto
-def Deteccion_texto(Imagen_BW, Ancho_prom, Alto_prom, proporcion):
+def dilatacion(Imagen_BW, Ancho_prom, Alto_prom, proporcion):
     Imagen_BW = imfill(Imagen_BW)
     
     Ancho_kernel = int( Ancho_prom*proporcion )
     Alto_kernel = int( Alto_prom*proporcion )
 
-    kernel = np.ones((Ancho_kernel,Alto_kernel),np.uint8)    # square (5,5)
+    kernel = np.ones((Ancho_kernel,Alto_kernel),np.uint8)
     Deteccion = cv2.dilate(Imagen_BW, kernel, iterations = 1)
     Deteccion = imfill(Deteccion)
     # El tercer argumento es opcional y por defecto es 1
-
-    Angulo = Deteccion_ang(Deteccion)
-    print("Angulo: {:.2f}" .format(Angulo) )
 
     Output = cv2.connectedComponentsWithStats(Deteccion, 8, cv2.CV_32S)
 
@@ -164,5 +137,28 @@ def Deteccion_texto(Imagen_BW, Ancho_prom, Alto_prom, proporcion):
     # Coloreamos los elementos
     Img_color = label2rgb(labels,num_labels)
     return Img_color
+
+## --------------------------------------------------------------------- #
+
+## -------------------------- Función expand --------------------------- #
+# Expande la imagen así entra el rectángulo que contiene al
+def expand(Img,Box):
+    Dim = list(reversed(Img.shape[:2]))
+
+    [Left,Right,Top,Bottom] = [0,0,0,0]
+
+    for i in range (0,3):
+        if Box[i][0] < 0 and abs(Box[i][0]) > Left:
+            Left = abs(Box[i][0])
+        if Box[i][0] > Dim[0] and abs(Box[i][0]) > Right:
+            Right = abs(Box[i][0])
+
+        if Box[i][1] < 0 and abs(Box[i][1]) > Top:
+            Top = abs(Box[i][1])
+        if Box[i][1] > Dim[1] and abs(Box[i][1]) > Bottom:
+            Bottom = abs(Box[i][1])
+
+    print (Top,Bottom,Left,Right)
+    return Top,Bottom,Left,Right
 
 ## --------------------------------------------------------------------- #
