@@ -178,7 +178,7 @@ def expand(Img,Box):
 
 ## --------------------------------- Aproximar región de interes -------------------------------- #
 # Aproxima el contorno del texto y devuelve los 4 puntos de un polígono irregular que lo contiene.
-# Esto es generado por chatgpt y me dió un buen par de ideas, pero aún no está probado.
+# Aún no está probado.
 
 # Parámetros de entrada:
 #   Img_path: Path de la imagen. Se abre la imagen dentro de la función
@@ -226,10 +226,12 @@ def dim_promedio(Conn_components) -> tuple:
 
         Suma_Ancho = Suma_Ancho + Bbox[2]
         Suma_Alto = Suma_Alto + Bbox[3]
+    
+    Ancho_prom = Suma_Ancho/(num_labels - 1)
+    Alto_prom = Suma_Alto/(num_labels - 1)
+    print(num_labels - 1)
 
-    # TODO puede estar mal, considerando siempre una etiqueta de más, la del fondo
-    # El return es el ancho y alto promedio de letras.
-    return Suma_Ancho/num_labels, Suma_Alto/num_labels
+    return Ancho_prom,Alto_prom
 
 ## ---------------------------------------------------------------------------------------------- #
 
@@ -256,6 +258,59 @@ def resultados(Conn_components):
     cant_elementos = (num_labels - 1) # En num_labels se cuenta el fondo también
     return Img_salida, cant_elementos
 
+## ---------------------------------------------------------------------------------------------- #
+
+
+## -------------------------------------- Titulo pendiente -------------------------------------- #
+def mostrar_errores(Conn_components):
+    kernel1 = np.array( ([[1,0,1],[0,1,0],[1,0,1]]), np.uint8)    # Para erosión local
+    # kernel1 = np.ones((3,1),np.uint8)    # Para erosión local
+    kernel2 = np.ones((2,2),np.uint8)    # Para dilatación local
+    
+    Ancho_prom,Alto_prom = dim_promedio(Conn_components)
+
+    num_labels =    Conn_components[0]   # Cantidad de elementos
+    labels =        Conn_components[1]   # Matriz con etiquetas
+    stats =         Conn_components[2]   # Matriz de stats
+
+    Img_BW = np.uint8(255*(labels != 0) )
+    duplicados = 0;    puntos = 0
+    # Agregamos Bounding Box
+    for i in range(1,num_labels):
+        Bbox = stats[i,]
+        # Bbox[0] : Coordenada x punto superior izquierdo
+        # Bbox[1] : Coordenada y punto superior izquierdo
+        # Bbox[2] : Ancho
+        # Bbox[3] : Alto
+
+        if Bbox[2] > 1.7*Ancho_prom:    # Probablemente sean dos letras empalmadas
+            Crop = Img_BW[Bbox[1] : Bbox[1]+Bbox[3],Bbox[0] : Bbox[0]+Bbox[2]]
+            # Crop = cv2.morphologyEx(Crop, cv2.MORPH_OPEN, kernel)
+            Crop = cv2.erode(Crop, kernel1, iterations = 1)
+            Crop = cv2.dilate(Crop, kernel2, iterations = 1)
+            Img_BW[Bbox[1] : Bbox[1]+Bbox[3], Bbox[0] : Bbox[0]+Bbox[2]] = Crop
+            
+            duplicados = duplicados + 1
+            # imshow(Crop,title = 'Dos letras detectadas')
+
+        if (Bbox[2] < 0.3*Ancho_prom and Bbox[3] < 0.3*Alto_prom):    # Puntos
+            puntos = puntos + 1
+
+    return Img_BW,duplicados
+
+
+## ---------------------------------------------------------------------------------------------- #
+
+## ------------------------- Calcular dimensiones de transformación ----------------------------- #
+def Box2Shape(Box):
+    Sup_izq = Box[1,1:-1]
+    Sup_der = Box[1,1:-2]
+    Inf_der = Box[1,1:-3]
+    Inf_izq = Box[1,1:-4]
+
+    Ancho_box = 2
+    Alto_box = 1
+    return Ancho_box, Alto_box
 ## ---------------------------------------------------------------------------------------------- #
 
 

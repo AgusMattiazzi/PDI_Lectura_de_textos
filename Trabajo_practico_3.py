@@ -7,26 +7,27 @@ import matlab       # Funciones homologas a matlab
 # Abrir Imagen
 Img_path = 'foto_7.jpg'
 Img = cv2.imread(Img_path)
+print(Img.shape)
+matlab.imshow(Img, title = 'Sin bordes')
 
 # Conversion a escala de grises
 Img_gris = cv2.cvtColor(Img,cv2.COLOR_BGR2GRAY)
 
 # Umbralado
-# ret,Img_BW1 = cv2.threshold(Img_gris,120,255,cv2.THRESH_BINARY)
-ret,Img_BW = cv2.threshold(Img_gris,25,255,cv2.THRESH_OTSU)
+# ret,Img_BW = cv2.threshold(Img_gris,120,255,cv2.THRESH_BINARY)
+_ ,Img_BW = cv2.threshold(Img_gris,30,255,cv2.THRESH_OTSU)
+
+# Img_edge = cv2.Canny(Img_gris,5,255)
+# matlab.imshow(Img_edge, title = 'Detección Canny')
+# # Para el caso 3 canny funciona re mal
+
+# # Img_BW2 = cv2.adaptiveThreshold(Img_gris,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)
+# Img_BW2 = cv2.adaptiveThreshold(Img_gris,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,15,5)
+# matlab.imshow(Img_BW2, title = 'Detección 2')
 
 # Los bordes son negros y el fondo (la hoja) es blanco. Para cambiar ésto
 # se invierte la imagen
 Img_BW = cv2.bitwise_not(Img_BW)  # Negativo
-
-# Dilatacion
-# Al principio se ejerce una dilatación pequeña para evitar que las letras tengan sus contornos
-# mal cerrados
-
-# Para dilatar, hay que crear una estructura llamada kernel
-kernel = np.ones((3,3),np.uint8)
-Img_BW = cv2.dilate(Img_BW, kernel, iterations = 1)
-# El tercer argumento es opcional y por defecto es 1
 
 # Limpiar bordes
 Img_BW = matlab.imclearborder(Img_BW)
@@ -65,10 +66,7 @@ print("Ancho: {:.2f},\tAlto: {:.2f}".format(Ancho_prom, Alto_prom))
 
 ## ------------------------------------ Deteccion de Texto -------------------------------------- #
 # Se usa dilatación con distintos kernel para resaltar palabras o párrafos
-dil_text = 4;  # dil_pal = 0.3
-
-# Img_palabra = matlab.dilatacion_especial(Img_BW, Ancho_prom, Alto_prom, dil_pal)
-# matlab.imshow(Img_palabra, title = 'Palabras detectadas 1')
+dil_text = 4
 
 Img_texto = matlab.dilatacion_especial(Img_BW, Ancho_prom, Alto_prom, dil_text)
 matlab.imshow(Img_texto, title = 'Texto detectado')
@@ -113,7 +111,6 @@ print(Box, Box.shape)
 
 Img_color = matlab.expand(Img_color,Box)
 Img_BW = matlab.expand(Img_BW,Box)
-# En realidad no es de matlab pero la puse ahí para tener todo en el mismo archivo
 
 # matlab.imshow(Img_color, title = 'Imagen Expandida')
 
@@ -147,6 +144,7 @@ match Img_path:
         Box = np.float32([ [2426,269],[873,1673],[1943,2686],[3469,879] ]) # Hecho
 
 Ancho,Alto = 2000,800    # Ancho y alto de la nueva imagen
+# Al tener un ancho y alto fijados se podría hacer una dilatación más o menos fija.
 
 P_2 = np.float32([ [Ancho,0],[0,0],[0,Alto],[Ancho,Alto] ])
 # Hay que tener cuidado con el orden de los puntos en P_2, deben
@@ -156,7 +154,6 @@ P_2 = np.float32([ [Ancho,0],[0,0],[0,Alto],[Ancho,Alto] ])
 Matriz = cv2.getPerspectiveTransform(Box,P_2)
 # Este comando crea la matriz para girar la imagen
 # Ambos conjuntos deben ser de tipo np.float32
-
 
 Transformada = cv2.warpPerspective(Img_BW,Matriz,(Ancho,Alto))
 # Transformada = cv2.warpPerspective(Img_color,Matriz,(Ancho,Alto))
@@ -171,21 +168,26 @@ matlab.imshow(Transformada, title = 'Imagen Transformada')
 # Se usa dilatación con distintos kernel para resaltar palabras o párrafos
 # No se dilata para obtener los caracteres
 
-kernel = np.ones((3,3),np.uint8)
-Img_BW = cv2.morphologyEx(Transformada, cv2.MORPH_OPEN, kernel)
+Output = cv2.connectedComponentsWithStats(Transformada, 8, cv2.CV_32S)
+Img_BW,duplicados = matlab.mostrar_errores(Output)    # Revisa la salida
+
+while duplicados != 0:
+    Output = cv2.connectedComponentsWithStats(Img_BW, 8, cv2.CV_32S)
+    Img_BW,duplicados = matlab.mostrar_errores(Output)    # Revisa la salida
+
 Output = cv2.connectedComponentsWithStats(Img_BW, 8, cv2.CV_32S)
 Img_color,num_labels = matlab.resultados(Output)
 print("Número de caracteres: ", num_labels)
 matlab.imshow(Img_color, title = 'Caracteres detectados')
 
-dil_palabra = 0.25
+dil_palabra = 0.4
 Img_BW = matlab.dilatacion_especial(Transformada, Ancho_prom, Alto_prom, dil_palabra)
 Output = cv2.connectedComponentsWithStats(Img_BW, 8, cv2.CV_32S)
 Img_color,num_labels = matlab.resultados(Output)
 print("Número de palabras: ", num_labels)
 matlab.imshow(Img_color, title = 'Palabras detectadas')
 
-dil_parrafos = 0.7
+dil_parrafos = 0.8
 Img_BW = matlab.dilatacion_especial(Transformada, Ancho_prom, Alto_prom, dil_parrafos)
 Output = cv2.connectedComponentsWithStats(Img_BW, 8, cv2.CV_32S)
 Img_color,num_labels = matlab.resultados(Output)
